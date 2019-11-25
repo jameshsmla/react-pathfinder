@@ -1,20 +1,33 @@
-import { createStore, combineReducers } from 'redux';
-import React from 'react';
-import { render } from 'react-dom'
-import { Provider } from 'react-redux';
-import { CounterReducer, CartReducer } from './reducers';
-import { CounterContainer } from './containers'
-import 'bootstrap/dist/css/bootstrap.css';
+import {
+      createStore
+} from 'redux';
 
-//create store 
-const rootReducer = combineReducers({ CounterReducer, CartReducer });
-const appStore = createStore(rootReducer);
+const FINDALL = 'FINDALL'
 
-const App = () => {
-      return <Provider store={appStore}>
-            <div className="container">
-                  <CounterContainer />
-            </div>
-      </Provider>
+const todoReducer = (state = [], action) => {
+      switch (action.type) {
+            case FINDALL:
+                  return [...state, action.todos];
+            default:
+                  return state;
+      }
 }
-render(<App />, document.getElementById('root'));
+const store = createStore(todoReducer);
+
+//action creators
+function findAllTodos(todos) {
+      setTimeout(function () {
+            //after 2000ms return action object
+            return {
+                  type: FINDALL,
+                  todos
+            }
+      }, 2000)
+
+}
+store.dispatch(findAllTodos({
+      "userId": 1,
+      "id": 1,
+      "title": "delectus aut autem",
+      "completed": false
+}))
