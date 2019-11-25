@@ -2710,6 +2710,1077 @@ const App = () => {
 render(<App />, document.getElementById('root'));
 
 
+React - Redux:
+.............
+React -Redux  : integration:
+............................
+
+                                  React-View
+				     |  -subscribe
+				   sendAction -via dispatcher
+				     |
+			--------------------------------Binding lib(react-redux)
+				     |
+
+				  Redux
+				    -Store
+				    -Reducer
+
+
+......................................................................................
+
+steps :
+
+>yarn add react-redux
+
+Use case : React,Redux,StateMapper,connect,Provider
+
+import { createStore } from 'redux';
+import React, { Fragment, Component } from 'react';
+import { render } from 'react-dom';
+import { Provider, connect } from 'react-redux';
+
+//Step : 1 : Redux : Reducer,Store 
+const INCREMENT = 'INCREMENT';
+
+const incrementReducer = (state = 10, action) => {
+      switch (action.type) {
+            case INCREMENT:
+                  return state + 1;
+            default:
+                  return state;
+      }
+}
+const store = createStore(incrementReducer);
+////////--------------------////////////////////////////////////////////////
+//Step 2 : Mapper configuration : state Mapper : Convert Redux's state as Prop to React.
+
+//Mapper function is just plain js function which returns a literal object. 
+//Mapper takes arg, which is entire state object. 
+
+function mapStateToProp(state) {
+      //config object : left(react Prop) : right (redux state)
+      return {
+            counter: state
+      }
+}
+//TODO : ACTION Mapper
+////////////////////************ */////////////////////////////////////////
+
+//Step 3 : Declare React component
+
+class Increment extends Component {
+
+      increment = () => {
+            this.props.dispatch({ type: INCREMENT });
+      }
+      render() {
+            console.log(this.props);
+            return <div>
+                  <h1>React-Redux-Increment Application</h1>
+                  <h2>Increment : {this.props.counter}</h2>
+                  <button onClick={this.increment}>Increment</button>
+            </div>
+      }
+}
+///////////////////////////////////////////////////////////////////////
+//Step 4 : Create HOC
+
+const IncrementContainer = connect(mapStateToProp)(Increment)
+/////////////////////////////////////////////////////////////////////////
+
+//Step 5: render Component
+const App = () => {
+      return <Provider store={store}>
+            <IncrementContainer />
+      </Provider>
+}
+
+render(<App />, document.getElementById('root'));
+
+
+.................................................................................
+
+Refactoring : dispatch mapper,state mapper,simple syntax 
+
+import { createStore } from 'redux';
+import React, { Fragment, Component } from 'react';
+import { render } from 'react-dom';
+import { Provider, connect } from 'react-redux';
+
+//Step : 1 : Redux : Reducer,Store 
+const INCREMENT = 'INCREMENT';
+
+const incrementReducer = (state = 10, action) => {
+      switch (action.type) {
+            case INCREMENT:
+                  return state + 1;
+            default:
+                  return state;
+      }
+}
+const store = createStore(incrementReducer);
+////////--------------------////////////////////////////////////////////////
+//Step 2 : Mapper configuration : state Mapper : Convert Redux's state as Prop to React.
+
+//Mapper function is just plain js function which returns a literal object. 
+//Mapper takes arg, which is entire state object. 
+
+/* function mapStateToProp(state) {
+      //config object : left(react Prop) : right (redux state)
+      return {
+            counter: state
+      }
+} */
+//const mapStateToProp = counter => ({ counter })
+//TODO : ACTION Mapper
+//dispatch is variable has function reference
+/* function mapdispatchToProp(dispatch) {
+      //key:function name as prop
+      return {
+            onIncrement: function () {
+                  dispatch({ type: INCREMENT });
+            }
+      }
+} */
+const mapdispatchToProp = dispatch => {
+      return {
+            onIncrement: function () {
+                  dispatch({ type: INCREMENT });
+            }
+      }
+}
+
+////////////////////************ */////////////////////////////////////////
+
+//Step 3 : Declare React component
+
+//Container Component
+class Increment extends Component {
+      render() {
+            return <IncrementView {...this.props} />
+      }
+}
+//Presentational Component
+/* const IncrementView = props => {
+      return <div>
+            <h1>React-Redux-Increment Application</h1>
+            <h2>Increment : {props.counter}</h2>
+            <button onClick={() => { props.onIncrement() }}>Increment</button>
+      </div>
+} */
+const IncrementView = ({ counter, onIncrement }) => <div>
+      <h1>React-Redux-Increment Application</h1>
+      <h2>Increment : {counter}</h2>
+      <button onClick={() => { onIncrement() }}>Increment</button>
+</div>;
+
+///////////////////////////////////////////////////////////////////////
+//Step 4 : Create HOC
+
+const IncrementContainer = connect(counter => ({ counter }), mapdispatchToProp)(Increment)
+/////////////////////////////////////////////////////////////////////////
+
+//Step 5: render Component
+const App = () => {
+      return <Provider store={store}>
+            <IncrementContainer />
+      </Provider>
+}
+
+render(<App />, document.getElementById('root'));
+
+....................................................................................
+Multiple Reducers,Single Store,React-redux Coimbine:
+....................................................
+
+store has single object=>App state
+
+
+Redux Application Structure
+let state = {
+    
+     LikeReducer: {like:10},
+     DislikeReducer:{}
+     BillingReducer:{},
+     ProductReducer:{}
+   
+}
+function mapStateToProp(state) {
+     return {
+            like: state.LikeReducer.like
+           
+      }
+}
+function mapStateToProp(state) {
+     const {like} = state.LikeReducer;
+     return {
+            //like: like
+        like
+           
+      }
+}
+
+
+import { createStore, combineReducers } from 'redux';
+import React, { Component } from 'react';
+import { render } from 'react-dom';
+import { Provider, connect } from 'react-redux';
+
+
+const LIKE = 'LIKE';
+const DISLIKE = 'DISLIKE';
+
+const LikeReducer = (state = {
+      like: 10
+}, {
+      type
+}) => {
+      switch (type) {
+            case LIKE:
+                  let like = state.like + 1;
+
+                  return {
+                        ...state, like
+                  };
+            default:
+                  return state;
+      }
+};
+const DislikeReducer = (state = {
+      dislike: 20
+}, {
+      type
+}) => {
+      switch (type) {
+            case DISLIKE:
+                  let dislike = state.dislike + 1;
+
+                  return {
+                        ...state, dislike
+                  };
+
+            default:
+                  return state;
+      }
+};
+
+//Reducer configuration
+const config = {
+      LikeReducer,
+      DislikeReducer
+};
+const store = createStore(combineReducers(config));
+////////////////////////////////////////////////////////////////////////////
+const likestateToMap = state => {
+      //like data extraction
+      const like = state.LikeReducer.like;
+      return {
+            like
+      }
+}
+const dislikestateToMap = state => {
+      //like data extraction
+      const dislike = state.DislikeReducer.dislike;
+      return {
+            dislike
+      }
+}
+////////////////////////////////////////////////////////////////////////////
+class LikeComponent extends Component {
+      render() {
+            return <div>
+                  <h1>Like Component</h1>
+                  <h2>Like {this.props.like}</h2>
+            </div>;
+      }
+}
+
+class DisLikeComponent extends Component {
+      render() {
+            return <div>
+                  <h1>DisLike  Component</h1>
+                  <h2>Like {this.props.dislike}</h2>
+            </div>;
+      }
+}
+////////////////////////////////////////////////////////////////////////////
+
+const LikeContainer = connect(likestateToMap)(LikeComponent);
+const DislikeContainer = connect(dislikestateToMap)(DisLikeComponent);
+///////////////////////////////////////////////////////////////////////////
+const App = () => {
+      return <Provider store={store}>
+            <LikeContainer />
+            <hr />
+            <DislikeContainer />
+      </Provider>
+}
+
+render(<App />, document.getElementById('root'));
+
+.................................................................................
+
+middlewares:
+
+What exactly is middleware?
+
+ Generally speaking middleware is something that goes between parts A and B of an application to
+transform what A sends before passing it to B. So instead of having:
+ A -----> B
+ we end up having
+ A ---> middleware 1 ---> middleware 2 ---> middleware N --> ... ---> B
+
+how to write middleware ?
+
+middleware is just javascript curry function / higher order function.
+eg: connect is curry function.
+
+Higher order function:
+
+//how to write curry function.
+
+/* function makeCake(milk) {
+      return function (sugar) {
+            return function (bread) {
+                  return function (cream) {
+                        return function (color) {
+                              //coimbine all data and return
+                              return `${milk}${sugar}${bread}${cream}${color}`;
+                        }
+                  }
+            }
+      }
+} */
+const makeCake = milk => sugar => bread => cream => color => `${milk}${sugar}${bread}${cream}${color}`
+//hof
+const cake = makeCake('milk')('sugar')('bread')('cream')('color')
+console.log(cake);
+
+......................*************...........................................
+
+Middleware syntax:
+
+  var anyMiddleware = function (store) {
+        return function(next) {
+            return function (action) {
+                // your middleware-specific code goes here
+            }
+        }
+    }
+
+Middleware implementation:
+
+  var anyMiddleware = function (store) {
+        return function(next) {
+            return function (action) {
+                // your middleware-specific code goes here
+
+		return next(action);
+            }
+        }
+    }
+
+
+Custom Middleware Implementation:
+import { createStore, applyMiddleware } from 'redux';
+
+const INCREMENT = 'INCRMENT';
+
+const CounterReducer = (state = 0, action) => {
+      switch (action.type) {
+            case INCREMENT:
+                  return state + 1;
+
+            default:
+                  return state
+      }
+}
+
+//Welcome Middleware 
+const WelcomeMiddleware = function (store) {
+      return function (next) {
+            return function (action) {
+                  // your middleware-specific code goes here
+                  console.info(`Welcome to Redux`);
+                  return next(action);
+            }
+      }
+};
+//Logger Middleware
+/* const Logger = function (store) {
+      return function (next) {
+            return function (action) {
+                  // your middleware-specific code goes here
+                  console.log('dispatching', action)
+                  let result = next(action)
+                  console.log('next state', store.getState())
+                  return result
+            }
+      }
+}; */
+//Arrow version
+const Logger = store => next => action => {
+      // your middleware-specific code goes here
+      console.log('dispatching', action)
+      let result = next(action)
+      console.log('next state', store.getState())
+      return result
+};
+
+// const store = createStore(CounterReducer, applyMiddleware(WelcomeMiddleware, Logger));
+const middlewareConfig = applyMiddleware(WelcomeMiddleware, Logger);
+
+const store = createStore(CounterReducer, middlewareConfig)
+
+store.subscribe(function () {
+      console.log(store.getState());
+})
+
+
+
+store.dispatch({ type: INCREMENT });
+store.dispatch({ type: INCREMENT });
+
+................................................................................
+
+Async Operations in Redux:
+
+1.Reducer never does REST Api calls
+2.Rest api calls must be isloated in to middlewares
+3.middlewares once get response ,again it dispatches to store and call to reducer
+
+function findAllTodos(){
+
+  return {type:'FINDALLTODS'}
+}
+
+User---store.dispatch(findAllTodos())------->middleware--->
+	
+ middleware waits for response----->dispatch({type:'FINDALLTODS'},response)-->
+
+	store--->will call reducer with response---reducer is called -->
+		
+		store is updated----->React subscribe the data.
+
+Async Implementations:
+
+1.timers
+2.Rest calls
+3.Web socket calls
+.....
+
+
+Async actions: without middleware : see errors
+
+import {
+      createStore
+} from 'redux';
+
+const FINDALL = 'FINDALL'
+
+const todoReducer = (state = [], action) => {
+      switch (action.type) {
+            case FINDALL:
+                  return [...state, action.todos];
+            default:
+                  return state;
+      }
+}
+const store = createStore(todoReducer);
+
+function findAllTodos(todos) {
+      setTimeout(function () {
+            return {
+                  type: FINDALL,
+                  todos
+            }
+      }, 2000)
+
+}
+
+store.dispatch(findAllTodos([{
+      "userId": 1,
+      "id": 1,
+      "title": "delectus aut autem",
+      "completed": false
+}]))
+
+
+The above code will throw error
+ "Error: Actions must be plain objects. Use custom middleware for async actions"
+
+
+How to solve this?
+
+We need to use async middlewares which is third party.
+
+Third party async middlewares
+
+1.redux-thunk
+2.redux-promise
+3.redux-saga
+4.redux-observable
+
+Setup thunk.
+
+>npm i redux-thunk
+
+
+
+
+.......................*****.............................................
+
+Thunk with Timer:
+import {
+      createStore,
+      applyMiddleware
+} from 'redux';
+
+import thunk from 'redux-thunk';
+
+const FINDALL = 'FINDALL'
+
+const todoReducer = (state = [], action) => {
+      switch (action.type) {
+            case FINDALL:
+                  return [...state, action.todos];
+            default:
+                  return state;
+      }
+}
+const store = createStore(todoReducer, applyMiddleware(thunk));
+
+store.subscribe(function () {
+      console.log('current state')
+      console.log(store.getState());
+})
+
+//without middleware
+/* function findAllTodos(todos) {
+      setTimeout(function () {
+            return {
+                  type: FINDALL,
+                  todos
+            }
+      }, 2000)
+
+} */
+function findAllTodos(todos) {
+      return function (dispatch) {
+            setTimeout(function () {
+                  dispatch({
+                        type: FINDALL,
+                        todos
+                  });
+            }, 3000)
+      }
+}
+
+
+store.dispatch(findAllTodos({
+      "userId": 1,
+      "id": 1,
+      "title": "delectus aut autem",
+      "completed": false
+}))
+
+................*********.....................................................
+
+Ajax calls:
+import {
+      createStore,
+      applyMiddleware
+} from 'redux';
+
+import thunk from 'redux-thunk';
+
+const FINDALL = 'FINDALL'
+const SAVE = 'SAVE';
+
+const todoReducer = (state = [], action) => {
+      switch (action.type) {
+            case FINDALL:
+                  return state.concat(action.todos)
+            case SAVE:
+                  return action.res;
+            default:
+                  return state;
+      }
+}
+const store = createStore(todoReducer, applyMiddleware(thunk));
+
+store.subscribe(function () {
+      console.log('current state')
+      console.log(store.getState());
+})
+
+
+//without middleware
+/* function findAllTodos() {
+      const url = 'https://jsonplaceholder.typicode.com/todos'
+      fetch(url).then(res => res.json()).then(todos => {
+            return {
+                  type: FINDALL,
+                  todos
+            }
+      });
+} */
+
+function findAllTodos() {
+      return function (dispatch) {
+            const url = 'http://localhost:9999/todos'
+            fetch(url).then(res => res.json()).then(todos => {
+                  dispatch({
+                        type: FINDALL,
+                        todos
+                  })
+            });
+      }
+
+}
+
+function saveTodo(todo) {
+      return function (dispatch) {
+            const url = 'http://localhost:9999/todos'
+            const data = JSON.stringify({
+                  "userId": 10,
+                  "id": Math.ceil(Math.random() * 10000),
+                  "title": "ipsam aperiam voluptates qui",
+                  "completed": false
+            });
+            const config = {
+                  method: 'POST',
+                  headers: {
+                        'Content-Type': 'application/json'
+                  },
+                  body: data
+            };
+            fetch(url, config).then(res => res.json()).then(res => {
+                  console.log(res);
+                  dispatch({
+                        type: SAVE,
+                        res
+                  })
+            });
+      }
+
+}
+
+store.dispatch(saveTodo({
+      "userId": 10,
+      "id": 201,
+      "title": "ipsam aperiam voluptates qui",
+      "completed": false
+}))
+store.dispatch(findAllTodos())
+......................................*******..................................
+
+Single Page Applications in react:
+
+>yarn add react-router-dom
+
+React-Router-DOM:
+
+1.Provides ready made components for routing.
+
+<BrowserRouter> and <HashRouter> : routers
+<Route> and <Switch> :route matchers
+<Link>, <NavLink>, and <Redirect> : navigation.
+
+
+<BrowserRouter>
+    ----------- : Master Navigation
+    ----------- : Master Router configuration
+</BrowserRouter>
+
+Master Navigation : Top level
+
+Menus are created with hyper links: we dont use hyper links, rather we use
+the Component "<Link">
+
+Master Router Configuration :
+  Url matcher : Route,Switch
+
+Route is Component will have two core properties
+ url, if url matches what to do  (component,redirect)
+
+Switch for selecting right router paths
+
+Sample code
+
+ <BrowserRouter>
+	<Link>
+	<Switch>
+		<Route path="/foo" component={NameOftheComponent}/>
+	 </Switch>
+ </BrowserRouter>
+
+
+
+  A <Switch> looks through all its children <Route>
+          elements and renders the first one whose path
+          matches the current URL. 
+
+Use a <Switch> any time
+you have multiple routes, but you want only one
+of them to render at a time
+
+
+Use case : basic routing:
+
+
+import React from 'react';
+import { render } from 'react-dom';
+import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
+
+
+const Home = () => {
+      return <h1>Home</h1>
+}
+const Greeting = () => {
+      return <h1>Greeting</h1>
+};
+
+
+const App = () => {
+      return <BrowserRouter>
+            <div>
+                  <ul>
+                        <li>
+                              <Link to="/">Home</Link>
+                        </li>
+                        <li>
+                              <Link to="/greeting">Greeting</Link>
+                        </li>
+                  </ul>
+                  <hr />
+                  <Switch>
+                        <Route exact path="/" component={Home} />
+                        <Route path="/greeting" component={Greeting} />
+                  </Switch>
+            </div>
+
+      </BrowserRouter>
+}
+render(<App />, document.getElementById('root'));
+..........................*****************....................................
+
+Nested Routing:
+................
+Sub Menu
+
+Note: if you want to access any route information like url,path parameters,query parameters.... inside any Component.
+ React-Router injects information as a prop.
+
+this.props =>incase class component
+funciton args => incase functional component
+
+match object : will be injected inside component as prop, through you can get url info.
+
+match object properties:
+
+1.url : which is used with Link : making parent urls
+2.path : which is used with Route : making paren url
+3.params : which is used to access route Params
+  /:paramId
+
+Nested Routing:
+import React from 'react';
+import { render } from 'react-dom';
+import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
+
+
+const Home = () => {
+      return <h1>Home</h1>
+}
+const Greeting = () => {
+      return <h1>Greeting</h1>
+};
+
+const Topic = props => {
+      const { match } = props
+      const { topicId } = match.params;
+      console.log(match.params)
+      return <div>
+            <h3> {topicId}  Topic Selected</h3>
+      </div>
+}
+
+const Topics = props => {
+      const { match } = props;
+      return <div>
+            <h1>Topics -Sub Menu</h1>
+            <ul>
+                  <li>
+                        <Link to={`${match.url}/react`}>React</Link>
+                  </li>
+                  <li>
+                        <Link to={`${match.url}/angular`}>Angular</Link>
+                  </li>
+                  <li>
+                        <Link to={`${match.url}/vue`}>Vue</Link>
+                  </li>
+            </ul>
+            <Route path={`${match.path}/:topicId`} component={Topic} />
+      </div >
+}
+
+const App = () => {
+      return <BrowserRouter >
+            <div>
+                  <ul>
+                        <li>
+                              <Link to="/">Home</Link>
+                        </li>
+                        <li>
+                              <Link to="/greeting">Greeting</Link>
+                        </li>
+                        <li>
+                              <Link to="/topics">Topics</Link>
+                        </li>
+                  </ul>
+                  <hr />
+                  <Switch>
+                        <Route exact path="/" component={Home} />
+                        <Route path="/greeting" component={Greeting} />
+                        <Route path="/topics" component={Topics} />
+
+                  </Switch>
+            </div>
+
+      </BrowserRouter>
+}
+render(<App />, document.getElementById('root'));
+//////////////////////******************////////////////////////////////////////
+
+Dynamic routing :
+ You are building dynamic menus based on api calls. : master-detail
+ 
+ 
+import React from 'react';
+import { render } from 'react-dom';
+import { BrowserRouter, Link, Route, Switch } from 'react-router-dom';
+
+
+const Home = () => {
+      return <h1>Home</h1>
+}
+const Greeting = () => {
+      return <h1>Greeting</h1>
+};
+
+const Topic = props => {
+      const { match } = props
+      const { topicId } = match.params;
+      console.log(match.params)
+      return <div>
+            <h3> {topicId}  Topic Selected</h3>
+      </div>
+}
+
+const Topics = props => {
+      const { match } = props;
+      return <div>
+            <h1>Topics -Sub Menu</h1>
+            <ul>
+                  <li>
+                        <Link to={`${match.url}/react`}>React</Link>
+                  </li>
+                  <li>
+                        <Link to={`${match.url}/angular`}>Angular</Link>
+                  </li>
+                  <li>
+                        <Link to={`${match.url}/vue`}>Vue</Link>
+                  </li>
+            </ul>
+            <Route path={`${match.path}/:topicId`} component={Topic} />
+      </div >
+}
+
+class DashBoard extends React.Component {
+      state = {
+            profiles: [],
+            profile: {}
+      }
+      componentDidMount() {
+            this.getAllProfiles();
+      }
+      getAllProfiles() {
+            const url = "https://jsonplaceholder.typicode.com/users";
+            fetch(url)
+                  .then(response => response.json())
+                  .then(profiles => {
+                        this.setState({ profiles: profiles })
+                        this.setState({ isloading: !this.state.isloading })
+                  })
+                  .catch(err => console.log(err));
+      }
+      getProfileById(id) {
+            const url = `https://jsonplaceholder.typicode.com/users/${id}`
+            fetch(url)
+                  .then(response => response.json())
+                  .then(profile => {
+                        this.setState({ profile: profile })
+                  })
+                  .catch(err => console.log(err));
+      }
+      render() {
+            return (
+                  <div>
+                        <h1>DashBoard Data</h1>
+
+                        <ul>
+                              {
+                                    this.state.profiles.map((profile, index) => {
+                                          return (
+                                                <li key={index}>
+                                                      <Link to={`/detail/${profile.id}`}>{profile.name}
+                                                      </Link>
+
+                                                </li>)
+                                    })
+                              }
+                        </ul>
+                  </div>
+            )
+      }
+
+}
+
+
+class DashBoardDetail extends React.Component {
+      state = {
+            profile: {}
+      }
+      getProfileById(id) {
+            const url = `https://jsonplaceholder.typicode.com/users/${id}`
+            fetch(url)
+                  .then(response => response.json())
+                  .then(profile => {
+                        this.setState({ profile: profile })
+                  })
+                  .catch(err => console.log(err));
+      }
+      componentDidMount() {
+            console.log(this.props.match.params);
+            this.getProfileById(this.props.match.params.id);
+      }
+      render() {
+            return (
+                  <React.Fragment>
+                        <h1>{this.state.profile.name} details </h1>
+                        <h1>{this.state.profile.email}</h1>
+                        <button onClick={() => {
+                              this.props.history.goBack();
+                        }}>goBack</button>
+                  </React.Fragment>
+            )
+      }
+}
+const App = () => {
+      return <BrowserRouter >
+            <div>
+                  <ul>
+                        <li>
+                              <Link to="/">Home</Link>
+                        </li>
+                        <li>
+                              <Link to="/greeting">Greeting</Link>
+                        </li>
+                        <li>
+                              <Link to="/topics">Topics</Link>
+                        </li>
+                        <li>
+                              <Link to="/dashboard">Dashboard</Link>
+                        </li>
+
+                  </ul>
+                  <hr />
+                  <Switch>
+                        <Route exact path="/" component={Home} />
+                        <Route path="/greeting" component={Greeting} />
+                        <Route path="/topics" component={Topics} />
+                        <Route path="/dashboard" component={DashBoard} />
+                        <Route path="/detail/:id" component={DashBoardDetail} />
+                  </Switch>
+            </div>
+
+      </BrowserRouter>
+}
+render(<App />, document.getElementById('root'));
+
+
+................................................................................
+Redux + React + Routing:
+........................
+
+1.Redux
+   reducer,store,mappers
+2.React
+   containers,Presentations
+Container component with Redux: 
+
+// before
+ connect(mapStateToProps)(Something)
+// after
+import { withRouter } from 'react-router-dom'
+withRouter(connect(mapStateToProps)(Something))
+
+
+Application Structure:
+
+const App = ()=> { 
+
+  return <Provider store={store}>
+	   <BrowserRouter>
+		 <Link>
+		 <Switch>
+			<Route>
+		 </Switch>
+	   </BrowserRouter>	
+	</Provider/>
+}
+*******************//////////////////**********************************************
+
+React 16.x.X features:
+.....................
+
+Remove class components,remove setState method.
+................................................
+
+hooks : abstraction for complex react code.
+
+useState : to remove setState method.
+
+Use state inside functions!.
+
+  <button onClick={() => this.setState({ count: this.state.count + 1 })}>
+    Click me
+  </button>
+ <button onClick={() => setCount(count + 1)}>
+    Click me
+  </button>
+*******************Thanks for Joining............................
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
