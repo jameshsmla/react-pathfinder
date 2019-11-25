@@ -3,4 +3,6 @@ export {
       INCREMENT,
       DECREMENT
 }
-from './countercontstants';
+      from './countercontstants';
+
+export { ADDTOCART, REMOVEFROMCART } from './cartconstants';

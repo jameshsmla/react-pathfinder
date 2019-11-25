@@ -2,16 +2,16 @@ import {
       createStore
 } from 'redux';
 import {
-      INCREMENT,
-      DECREMENT
+      ADDTOCART,
+      REMOVEFROMCART
 } from './actioncontants';
+
 import {
-      CounterReducer
+      CartReducer
 } from './reducers';
 
-
 //3.create store object
-const store = createStore(CounterReducer);
+const store = createStore(CartReducer);
 
 //4.Store subscription
 store.subscribe(function () {
@@ -20,16 +20,32 @@ store.subscribe(function () {
       console.log(store.getState());
 });
 
-//User interaction without react now.
+//send cart items.
 
-const incrementAction = {
-      type: INCREMENT
-}
-store.dispatch(incrementAction);
-store.dispatch(incrementAction);
-store.dispatch(incrementAction);
-store.dispatch(incrementAction);
+/* store.dispatch({ type: ADDTOCART, newItem: { id: 1, name: 'Iphone', price: 100000, model: '11' } })
+store.dispatch({ type: ADDTOCART, newItem: { id: 2, name: 'Iphone', price: 80000, model: '10' } })
+store.dispatch({ type: ADDTOCART, newItem: { id: 3, name: 'Iphone', price: 28000, model: '7' } }) */
 
-store.dispatch({
-      type: DECREMENT
+//Action creators
+/* const addItem = newItem => {
+      return {
+            type: ADDTOCART,
+            newItem: newItem
+      }
+} */
+const addItem = newItem => ({
+      type: ADDTOCART,
+      newItem
 });
+
+store.dispatch(addItem({ id: 1, name: 'Iphone', price: 100000, model: '11' }))
+store.dispatch(addItem({ id: 2, name: 'Iphone', price: 80000, model: '10' }))
+store.dispatch(addItem({ id: 3, name: 'Iphone', price: 28000, model: '7' }))
+
+
+console.log('Remove items:')
+//action creators
+const removeItem = id => ({ type: REMOVEFROMCART, id });
+store.dispatch(removeItem(2));
+// Update item : object to be updated , price
+// find item from the cart by id
