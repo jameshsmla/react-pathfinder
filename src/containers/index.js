@@ -6,3 +6,7 @@ import {
 export {
       Container
 };
+export {
+      CounterContainer
+}
+from './CounterContainer'

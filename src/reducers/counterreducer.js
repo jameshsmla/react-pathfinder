@@ -19,7 +19,7 @@ import {
 } */
 //literal object
 const initState = {
-      count: 0
+      count: 10
 }
 export const CounterReducer = (state = initState, action) => {
       console.log(`previous state - action `)
